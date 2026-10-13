@@ -1,0 +1,35 @@
+# 이 파일을 복사해서 profile.yaml로 저장한 뒤 채워 넣으세요.
+#   cp profile.example.yaml profile.yaml
+# profile.yaml은 매칭 기준입니다. 코드가 읽기만 하고 수정하지 않습니다.
+
+role: 프론트엔드 개발자
+
+career:
+  min: 0          # 0 = 신입
+  max: 2          # 경력 하한이 이 값보다 큰 공고는 제외
+
+# 사이트 검색에 쓰는 키워드 (사람인은 키워드마다 따로 호출)
+search_keywords:
+  - 프론트엔드
+  - React
+
+skills:
+  must: [React, TypeScript]                              # 하나라도 있어야 통과
+  strong: [Vite, Tailwind CSS, Zustand, React Native, WebSocket]   # 일치당 +3
+  plus: [MediaPipe, FCM, Playwright, Jest]               # 일치당 +1
+
+# LLM에게 전달하는 경력 요약 (3~5줄)
+experience_summary: |
+  SSAFY 팀 프로젝트 3건에서 프론트엔드 담당.
+  온디바이스(Jetson) React 앱, WebSocket+FCM 통신 레이어 구현,
+  첫 화면 번들 크기 약 90% 감량 경험.
+
+prefer:
+  locations: []   # 예: [서울, 경기 성남] — 비우면 지역 무관
+  domains: []     # 예: [AI, 헬스케어] — 가산점 참고용
+
+exclude_keywords: [시니어, 팀장, 리드, "7년 이상", "10년 이상"]
+
+mail:
+  max_items: 10   # 메일 본문 카드 개수
+  min_score: 60   # 이 점수 미만은 하단 목록으로
