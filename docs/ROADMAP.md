@@ -38,11 +38,11 @@
 
 완료 기준: 사용자 메일함에 실제 공고가 점수순으로 정리된 메일이 도착한다.
 
-- [ ] `src/match/concepts.ts`: 텍스트 정규화(대소문자·공백·점·하이픈·슬래시·가운뎃점 무시) + 동의어 사전으로 개념 추출 (2글자 이하 영문 약어는 단어 경계 매칭) + 테스트
-- [ ] `src/match/rules.ts`: 트랙별 통과 판정(must_any·must_all·exclude_concepts·경력 한도·watch_companies 우회) + 점수화 + priority 기반 트랙 선택 + 테스트
-- [ ] `src/match/llm.ts`: Claude 점수화, zod 검증, 재시도, 실패 시 대체 + 실패 경로 테스트(SDK 모킹)
-- [ ] `src/mail/DailyReport.tsx`: React Email 템플릿, 트랙별 섹션 (SPEC 6장 구성). `npm run email:dev`로 미리보기
-- [ ] `src/mail/send.ts`: Resend 발송. dry-run이면 HTML 파일로 저장
+- [x] `src/match/concepts.ts`: 텍스트 정규화(대소문자·공백·점·하이픈·슬래시·가운뎃점 무시) + 동의어 사전으로 개념 추출 (2글자 이하 영문 약어는 단어 경계 매칭) + 테스트
+- [x] `src/match/rules.ts`: 트랙별 통과 판정(must_any·must_all·exclude_concepts·경력 한도·watch_companies 우회) + 점수화 + priority 기반 트랙 선택 + 테스트
+- [x] `src/match/llm.ts`: Claude 점수화, zod 검증, 재시도, 실패 시 대체 + 실패 경로 테스트(SDK 모킹)
+- [x] `src/mail/DailyReport.tsx`: React Email 템플릿, 트랙별 섹션 (SPEC 6장 구성). `npm run email:dev`로 미리보기
+- [x] `src/mail/send.ts`: Resend 발송. dry-run이면 HTML 파일로 저장
 - [ ] [사용자] `npm start`로 첫 실제 발송 확인
 
 ## 4주차: 자동화와 튜닝
@@ -75,3 +75,8 @@
 | 2026-10-15 | 1주차: src/index.ts + out/preview.html | `npm run dry` 성공, 9개 테스트 통과 (총 29개) |
 | 2026-10-15 | 2주차: src/collectors/saramin.ts | typecheck 통과, 13개 테스트 통과 (총 42개), fixture로만 진행 |
 | 2026-10-15 | 2주차: src/store/seen.ts + index.ts allSettled 연결 | `npm run dry --save-seen` 후 `npm run dry` → 신규 0건. typecheck 통과, 53개 테스트 통과 |
+| 2026-10-15 | 3주차: src/match/concepts.ts | typecheck 통과, 78개 테스트 통과 (+25). FE·IT 오탐 방지 포함 |
+| 2026-10-15 | 3주차: src/match/rules.ts | typecheck 통과, 104개 테스트 통과 (+26). must_any·must_all·exclude_concepts·watch_companies 포함 |
+| 2026-10-15 | 3주차: src/match/llm.ts | typecheck 통과, 114개 테스트 통과 (+10). child_process·rmSync Windows 충돌 → 동적 import + rmdirSync로 해결 |
+| 2026-10-15 | 3주차: src/mail/DailyReport.tsx | typecheck 통과, 114개 테스트 통과. tsconfig에 types:node 추가(React 패키지 설치 후 자동탐지 깨짐) |
+| 2026-10-15 | 3주차: src/mail/send.ts + index.ts 실제 파이프라인 연결 | `npm run dry` → out/preview.html 생성 확인. typecheck + 114개 테스트 통과 |

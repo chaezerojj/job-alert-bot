@@ -1,74 +1,18 @@
-import { mkdirSync, writeFileSync } from 'fs';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 import { loadConfig } from './config';
-import type { Config } from './config';
-import type { Job, ScoredJob } from './types';
+import type { Config, Profile } from './config';
+import type { Job } from './types';
 import { collectSaramin } from './collectors/saramin';
 import { loadSeen, saveSeen, filterNew, addEntries } from './store/seen';
-import { renderPreviewHtml } from './mail/preview';
+import { applyRules } from './match/rules';
+import { scoreLlm } from './match/llm';
+import { sendReport } from './mail/send';
 
 const isDryRun = process.argv.includes('--dry-run');
 const doSaveSeen = process.argv.includes('--save-seen');
 const SEEN_PATH = 'data/seen.json';
-
-// 2주차까지 사용하는 스켈레톤용 가짜 공고
-const FAKE_JOBS: ScoredJob[] = [
-  {
-    id: 'saramin:10001',
-    source: 'saramin',
-    title: '프론트엔드 개발자 (React/TypeScript)',
-    company: '테스트컴퍼니A',
-    url: 'https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_idx=10001',
-    techStack: ['React', 'TypeScript', 'Next.js'],
-    career: { min: 0, max: 2, label: '신입·경력 2년' },
-    location: '서울 강남구',
-    track: 'fe',
-    matchedConcepts: ['frontend', 'react', 'typescript'],
-    ruleScore: 8,
-    llmScore: 85,
-    reason: 'React + TypeScript 스택이 프로필과 일치. 경력 요건도 적합.',
-    matchedSkills: ['React', 'TypeScript', 'Next.js'],
-    gaps: [],
-    postedAt: '2026-10-15T08:00:00+09:00',
-  },
-  {
-    id: 'saramin:20001',
-    source: 'saramin',
-    title: '신입 프론트엔드 엔지니어',
-    company: '테스트스타트업B',
-    url: 'https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_idx=20001',
-    techStack: ['Vue.js', 'JavaScript'],
-    career: { min: 0, max: 1, label: '신입' },
-    location: '서울 마포구',
-    track: 'fe',
-    matchedConcepts: ['frontend'],
-    ruleScore: 5,
-    llmScore: 62,
-    reason: 'Vue.js 사용으로 React 경험과 일부 겹침. 신입 포지션.',
-    matchedSkills: ['JavaScript'],
-    gaps: ['Vue.js'],
-  },
-  {
-    id: 'saramin:10002',
-    source: 'saramin',
-    title: '대졸 신입 공개채용 (IT개발)',
-    company: '테스트대기업C',
-    url: 'https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_idx=10002',
-    techStack: [],
-    career: { min: 0, max: 0, label: '신입' },
-    location: '서울',
-    track: 'bigco',
-    matchedConcepts: ['newgrad', 'sw_dev'],
-    ruleScore: 10,
-    llmScore: 78,
-    reason: '신입 공채. IT개발 직군 지원 가능.',
-    matchedSkills: [],
-    gaps: [],
-    deadline: '2026-10-31T23:59:00+09:00',
-  },
-];
 
 // ── 수집 ──────────────────────────────────────────────────────────────────────
 
@@ -108,35 +52,39 @@ async function main(): Promise<void> {
   const seen = loadSeen(SEEN_PATH);
   const warnings: string[] = [];
 
-  if (!isDryRun) {
-    // 실제 실행: 수집 → 중복 제거 (매칭·발송은 3주차)
-    const rawJobs = await runCollectors(config, warnings);
-    const newJobs = filterNew(rawJobs, seen);
-    if (warnings.length > 0) {
-      for (const w of warnings) console.warn(`[경고] ${w}`);
-    }
-    console.log(`수집 ${rawJobs.length}건, 신규 ${newJobs.length}건 · 매칭·발송은 3주차 구현 예정`);
-    return;
-  }
+  // 1. 수집
+  const rawJobs = await runCollectors(config, warnings);
 
-  // dry-run: 가짜 공고 + seen 비교
-  const displayJobs = FAKE_JOBS.filter((job) => !(job.id in seen));
+  // 2. 중복 제거
+  const newJobs = filterNew(rawJobs, seen);
+  console.log(`수집 ${rawJobs.length}건, 신규 ${newJobs.length}건`);
 
-  console.log(
-    `job-alert-bot: ${todayKst} · 트랙 ${config.profile.tracks.length}개 · 신규 ${displayJobs.length}건`,
+  // 3. 규칙 매칭 + LLM 점수화
+  const matchedJobs = applyRules(newJobs, config.profile);
+  const scoredJobs = await scoreLlm(matchedJobs, config.profile, warnings);
+
+  // 4. 메일 발송 (dry-run이면 out/preview.html 저장)
+  await sendReport(
+    {
+      date: todayKst,
+      warnings,
+      jobs: scoredJobs,
+      tracks: config.profile.tracks,
+      maxItemsPerTrack: config.profile.mail.max_items_per_track,
+      minScore: config.profile.mail.min_score,
+    },
+    {
+      isDryRun,
+      resendKey: config.env.resendKey,
+      mailTo: config.env.mailTo,
+      mailFrom: config.env.mailFrom,
+    },
   );
-  if (warnings.length > 0) {
-    for (const w of warnings) console.warn(`[경고] ${w}`);
-  }
 
-  const html = renderPreviewHtml({ jobs: displayJobs, date: todayKst, isDryRun, warnings });
-  mkdirSync('out', { recursive: true });
-  writeFileSync('out/preview.html', html, 'utf-8');
-  console.log('out/preview.html 저장 완료');
-
-  if (doSaveSeen) {
-    saveSeen(SEEN_PATH, addEntries(seen, displayJobs, nowKst));
-    console.log(`seen.json 갱신 완료 (${displayJobs.length}건)`);
+  // 5. seen.json 갱신 (실제 실행 또는 --save-seen 플래그)
+  if (!isDryRun || doSaveSeen) {
+    saveSeen(SEEN_PATH, addEntries(seen, scoredJobs, nowKst));
+    console.log(`seen.json 갱신 완료 (${scoredJobs.length}건)`);
   }
 }
 
