@@ -14,7 +14,7 @@
 | `yaml` | profile.yaml 파싱 |
 | `dayjs` | 날짜 · KST 타임존 |
 | `playwright` | 원티드 렌더링 (내부 JSON으로 충분하면 쓰지 않음) |
-| `@anthropic-ai/sdk` | Claude API |
+| ~~`@anthropic-ai/sdk`~~ | ~~Claude API~~ (삭제됨 → D-010. `claude -p` CLI로 대체) |
 | `resend` | 메일 발송 |
 | `@react-email/components`, `react`, `@types/react`, `react-email` | 메일 템플릿 · 미리보기 |
 | `vitest` | 테스트 |
@@ -43,7 +43,7 @@
 - 이유: DB 없이 시작할 수 있다. 실행이 끝나면 Actions가 파일을 저장소에 다시 커밋한다.
 - 재검토 시점: 항목이 수천 건을 넘거나 대시보드가 필요해질 때 Supabase로 옮긴다.
 
-## D-005. 매칭은 규칙 필터 → LLM 점수화 2단계로 한다
+## D-005. 매칭은 규칙 필터 → LLM 점수화 2단계로 한다 (변경됨 → D-010)
 
 - 날짜: 2026-10-13
 - 이유: 공짜인 규칙 필터로 후보를 30개 안팎으로 줄여 LLM 비용을 낮춘다.
@@ -54,3 +54,40 @@
 - 날짜: 2026-10-13
 - 이유: 사용자가 익숙한 React로 메일 템플릿을 만든다.
 - 주의: 발신 도메인 인증 전에는 Resend 가입 메일로만 받을 수 있다.
+
+## D-007. 매칭은 "동의어 사전 + 트랙" 구조로 한다
+
+- 날짜: 2026-10-13
+- 배경: 프론트엔드뿐 아니라 대기업 공채 개발직, AX 직무에도 지원한다. 회사마다 같은 직무를 다른 단어로 쓴다.
+- 내용:
+  - `synonyms`: 여러 표현을 개념 이름 하나로 묶는다. 트랙은 단어가 아니라 개념 이름으로 조건을 건다
+  - `tracks`: 트랙마다 검색어·통과 조건·가산점·LLM 채점 기준(`llm_focus`)이 다르다. 메일도 트랙별 섹션
+  - 대기업 공채는 스택이 거의 안 적혀 있어 스택 대신 "신입 공채 + 개발/IT 직군" 기준으로 판단하고, 사람인 공채속보(`bbs_gb=1`)·상장사(`stock`)로 검색한다 (변경됨 → D-008)
+- 사전은 처음부터 완벽히 쓰지 않는다. 규칙 필터는 넓게, 의미 판단은 LLM에 맡기고, `npm run vocab`으로 수집 데이터에서 새 표현을 찾아 사용자가 직접 추가한다
+- 한계: 자사 채용 사이트에만 올리는 대기업 공고는 놓칠 수 있다. 관심 기업은 `watch_companies`로 관리하되 기업별 사이트 크롤링은 하지 않는다
+
+## D-008. `bigco` 트랙의 `stock` 필터를 삭제하고 `watch_companies`로 관리한다
+
+- 날짜: 2026-10-15
+- 배경: D-007에서 `stock=kospi kosdaq`으로 상장사만 거르던 방식이 CJ올리브네트웍스, 하나은행 등 비상장 계열사를 빠뜨렸다.
+- 결정: `bigco` 트랙 사람인 호출에서 `stock` 파라미터를 제거한다. 관심 기업은 `watch_companies`에 추가해서 `keywords=회사명`으로 따로 검색한다 (`bbs_gb` 없이).
+- 대가: 상장 여부로 자동 필터되지 않아 LLM 2단계에서 더 걸러야 한다. 그러나 빠뜨리는 것보다는 낫다.
+
+## D-009. 공통 `exclude_keywords`에서 `박사`를 제거한다
+
+- 날짜: 2026-10-15
+- 이유: "학사/석사/박사" 형태로 학력을 나열하는 대기업 공채 공고가 `박사`라는 단어 때문에 통째로 제외됐다.
+- 결정: `exclude_keywords`에 `박사`를 두지 않는다. 연구직 필터링은 `AX` 트랙의 `exclude_concepts: [research]`로만 한다.
+
+## D-010. LLM 점수화는 `@anthropic-ai/sdk` 대신 `claude -p` CLI로 호출한다
+
+- 날짜: 2026-10-15
+- 이유: Anthropic API 별도 결제 없이 Pro 구독 토큰을 사용한다. `@anthropic-ai/sdk`와 `ANTHROPIC_API_KEY`가 불필요해진다.
+- 내용:
+  - `child_process`로 `claude -p` 실행. `--output-format json --json-schema '<스키마>'`로 구조화 출력
+  - 빈 임시 폴더를 작업 디렉터리로 지정 → 프로젝트 CLAUDE.md·hooks·MCP 서버 로딩 방지
+  - `--permission-mode dontAsk` → 도구 호출 차단
+  - `--bare` 사용 안 함 — bare 모드는 구독 토큰을 읽지 않아 `ANTHROPIC_API_KEY`가 다시 필요해짐
+  - Actions에서는 `CLAUDE_CODE_OAUTH_TOKEN` 시크릿 + `npm install -g @anthropic-ai/claude-code`로 러너에 CLI 설치
+  - 로컬은 `claude login` 상태면 토큰 없이 동작
+- 안전장치: D-005와 동일 — CLI 실패 시 규칙 점수로 대체하고 메일 경고에 원인 표시

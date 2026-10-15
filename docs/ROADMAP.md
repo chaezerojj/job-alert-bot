@@ -7,10 +7,10 @@
 
 - [x] [사용자] 사람인 API 이용신청 (2026-10-13 신청, 승인 대기)
 - [ ] [사용자] 사람인 승인 후 access-key 발급 → `.env`의 `SARAMIN_ACCESS_KEY`에 입력
-- [ ] [사용자] Anthropic Console에서 API 키 발급, 월 사용 한도 설정
+- [ ] [사용자] 4주차 전에 `claude setup-token`으로 OAuth 토큰 발급 → GitHub Secret `CLAUDE_CODE_OAUTH_TOKEN`에 등록
 - [ ] [사용자] Resend 가입, API 키 발급
-- [ ] [사용자] GitHub 비공개 저장소 생성
-- [ ] [사용자] `profile.example.yaml`을 복사해 `profile.yaml` 작성 (희망 지역, 경력 범위, 제외 키워드)
+- [x] [사용자] GitHub 비공개 저장소 생성
+- [x] [사용자] `profile.example.yaml`을 복사해 `profile.yaml` 작성 (트랙 3개 확인, 희망 지역, 관심 기업, 제외 키워드)
 
 ## 1주차: 기반 다지기
 
@@ -38,9 +38,10 @@
 
 완료 기준: 사용자 메일함에 실제 공고가 점수순으로 정리된 메일이 도착한다.
 
-- [ ] `src/match/aliases.ts` + `src/match/rules.ts`: 규칙 필터와 기본 점수 + 테스트
+- [ ] `src/match/concepts.ts`: 텍스트 정규화(대소문자·공백·점·하이픈·슬래시·가운뎃점 무시) + 동의어 사전으로 개념 추출 (2글자 이하 영문 약어는 단어 경계 매칭) + 테스트
+- [ ] `src/match/rules.ts`: 트랙별 통과 판정(must_any·must_all·exclude_concepts·경력 한도·watch_companies 우회) + 점수화 + priority 기반 트랙 선택 + 테스트
 - [ ] `src/match/llm.ts`: Claude 점수화, zod 검증, 재시도, 실패 시 대체 + 실패 경로 테스트(SDK 모킹)
-- [ ] `src/mail/DailyReport.tsx`: React Email 템플릿 (SPEC 6장 구성). `npm run email:dev`로 미리보기
+- [ ] `src/mail/DailyReport.tsx`: React Email 템플릿, 트랙별 섹션 (SPEC 6장 구성). `npm run email:dev`로 미리보기
 - [ ] `src/mail/send.ts`: Resend 발송. dry-run이면 HTML 파일로 저장
 - [ ] [사용자] `npm start`로 첫 실제 발송 확인
 
@@ -48,11 +49,12 @@
 
 완료 기준: 7일 연속, 사람 손 없이 메일이 도착한다.
 
-- [ ] `.github/workflows/daily.yml` 작성 (cron + workflow_dispatch + seen.json 커밋)
+- [ ] `.github/workflows/daily.yml` 작성 (cron + workflow_dispatch + seen.json 커밋). 러너에 `npm install -g @anthropic-ai/claude-code`로 CLI 설치 + `CLAUDE_CODE_OAUTH_TOKEN` env 전달 포함
 - [ ] [사용자] GitHub Secrets 등록, Actions 쓰기 권한 설정, 수동 실행으로 테스트
 - [ ] 원티드가 Actions 환경에서 차단되는지 확인. 차단되면 DECISIONS.md에 대응 기록
 - [ ] 메일 상단 경고 영역이 실제 실패 상황에서 뜨는지 확인 (키를 일부러 틀려서 테스트)
-- [ ] [사용자] 7일간 받아보며 좋았던/별로였던 공고 기록 → `profile.yaml`·프롬프트 튜닝
+- [ ] `npm run vocab`: 사전에 없는 자주 나오는 표현 상위 50개 + LLM `newTerms`를 `out/vocab.md`로 출력
+- [ ] [사용자] 7일간 받아보며 좋았던/별로였던 공고 기록, `out/vocab.md` 보고 `synonyms` 보강 → `profile.yaml`·`llm_focus` 튜닝
 
 ## 확장 (MVP 이후)
 

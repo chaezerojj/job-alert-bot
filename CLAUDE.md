@@ -42,7 +42,8 @@ src/
     saramin.ts
     wanted.ts
   match/
-    rules.ts          # 1단계 규칙 필터 + 기본 점수
+    concepts.ts       # 정규화 + 동의어 사전 → 개념 추출
+    rules.ts          # 1단계 트랙별 규칙 필터 + 점수
     llm.ts            # 2단계 Claude 점수화
   store/seen.ts       # data/seen.json 읽기·쓰기
   mail/
@@ -51,7 +52,7 @@ src/
 tests/
   fixtures/           # 사이트별 실제 응답 샘플 (개인정보·키 제거)
 data/seen.json        # 이미 보낸 공고 기록 (Actions가 커밋)
-profile.yaml          # 매칭 기준. 사용자가 직접 관리
+profile.yaml          # 매칭 기준(동의어 사전 + 트랙). 사용자가 직접 관리. 에이전트는 수정 제안만 하고 직접 고치지 않는다
 ```
 
 ## 반드시 지킬 것
