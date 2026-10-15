@@ -1,0 +1,26 @@
+synonyms:
+  frontend: [프론트엔드, FE, Frontend, 프론트]
+  react: [React, ReactJS, React.js]
+  newgrad: [신입, 경력무관, 인턴]
+
+tracks:
+  - id: fe
+    label: 프론트엔드
+    priority: 1
+    career: { min: 0, max: 2 }
+    search_keywords: [프론트엔드, React]
+    must_any: [frontend, react]
+    boost: { react: 3, typescript: 2 }
+    llm_focus: 기술 스택과 경력 요건을 중심으로 평가한다.
+
+experience_summary: |
+  테스트용 경력 요약. React와 TypeScript를 사용한 1년 미만의 경험.
+
+prefer:
+  locations: []
+
+exclude_keywords: [시니어, 팀장, 박사]
+
+mail:
+  max_items_per_track: 5
+  min_score: 60

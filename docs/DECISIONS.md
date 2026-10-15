@@ -91,3 +91,10 @@
   - Actions에서는 `CLAUDE_CODE_OAUTH_TOKEN` 시크릿 + `npm install -g @anthropic-ai/claude-code`로 러너에 CLI 설치
   - 로컬은 `claude login` 상태면 토큰 없이 동작
 - 안전장치: D-005와 동일 — CLI 실패 시 규칙 점수로 대체하고 메일 경고에 원인 표시
+
+## D-011. 원티드 수집기를 스킵한다
+
+- 날짜: 2026-10-15
+- 이유: 사전 조사 결과 수집 불가. robots.txt가 CloudFront WAF에 의해 403 차단되어 수집 허용 여부를 확인할 수 없고, 공개 JSON API가 없어 로그인 세션 없이는 채용 목록에 접근하지 못한다.
+- 결정: `wanted.ts` 구현하지 않음. 사람인만으로 MVP 진행.
+- 재검토 시점: 원티드가 공개 API를 제공하거나 이용약관에 수집 허용을 명시할 때.

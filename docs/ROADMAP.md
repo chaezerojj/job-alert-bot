@@ -16,23 +16,23 @@
 
 완료 기준: `npm run dry` 실행 시 가짜 공고 3건이 `out/preview.html`에 표시된다.
 
-- [ ] 프로젝트 초기화: `package.json`(type: module), TypeScript, tsx, ESLint, Prettier, Vitest 설정. `npm run typecheck/test/lint`가 동작
-- [ ] `src/types.ts`: `Job`, `ScoredJob` zod 스키마와 타입
-- [ ] `src/config.ts`: `.env`와 `profile.yaml`을 읽고 zod로 검증. 키가 없으면 어떤 키가 빠졌는지 알려주고 종료
-- [ ] `src/index.ts`: 파이프라인 뼈대 + `--dry-run` 플래그. 지금은 가짜 공고 3건으로 끝까지 흐르게
-- [ ] 아주 단순한 HTML로 `out/preview.html` 출력 (React Email은 3주차)
+- [x] 프로젝트 초기화: `package.json`(type: module), TypeScript, tsx, ESLint, Prettier, Vitest 설정. `npm run typecheck/test/lint`가 동작
+- [x] `src/types.ts`: `Job`, `ScoredJob` zod 스키마와 타입
+- [x] `src/config.ts`: `.env`와 `profile.yaml`을 읽고 zod로 검증. 키가 없으면 어떤 키가 빠졌는지 알려주고 종료
+- [x] `src/index.ts`: 파이프라인 뼈대 + `--dry-run` 플래그. 지금은 가짜 공고 3건으로 끝까지 흐르게
+- [x] 아주 단순한 HTML로 `out/preview.html` 출력 (React Email은 3주차)
 
 ## 2주차: 수집과 중복 제거
 
 완료 기준: `npm run dry`를 두 번 연속 실행하면 두 번째에는 신규 0건으로 표시된다. (dry에서도 seen 비교는 하되 저장만 안 함 → 테스트용으로 `--save-seen` 플래그 허용)
 
-- [ ] [사용자] 사람인 access-key 준비 확인 (없으면 이 단계는 fixture로만 진행)
-- [ ] `src/collectors/saramin.ts`: 사람인 API 호출 → `Job[]` 변환. `docs/sources/saramin.md` 따름
-- [ ] 사람인 실제 응답 1회를 `tests/fixtures/saramin.json`으로 저장(10건 이하) + 변환 테스트
-- [ ] [사용자와 함께] 원티드 사전 조사: 약관·robots.txt 확인, 목록 화면의 JSON 요청 찾기. 결과를 `docs/sources/wanted.md`에 기록
-- [ ] `src/collectors/wanted.ts`: 조사 결과 방식으로 구현 → `Job[]`
-- [ ] `src/store/seen.ts`: 읽기·쓰기·30일 정리 + 테스트
-- [ ] `index.ts`에서 수집기를 `Promise.allSettled`로 묶고, 실패·0건을 경고 목록에 담기
+- [x] [사용자] 사람인 access-key 준비 확인 (없으면 이 단계는 fixture로만 진행)
+- [x] `src/collectors/saramin.ts`: 사람인 API 호출 → `Job[]` 변환. `docs/sources/saramin.md` 따름
+- [x] 사람인 실제 응답 1회를 `tests/fixtures/saramin.json`으로 저장(10건 이하) + 변환 테스트
+- [x] [사용자와 함께] 원티드 사전 조사: 약관·robots.txt 확인, 목록 화면의 JSON 요청 찾기. 결과를 `docs/sources/wanted.md`에 기록 (→ D-011: 수집 불가, 스킵)
+- [x] `src/collectors/wanted.ts`: 조사 결과 방식으로 구현 → `Job[]` (D-011에 의해 스킵)
+- [x] `src/store/seen.ts`: 읽기·쓰기·30일 정리 + 테스트
+- [x] `index.ts`에서 수집기를 `Promise.allSettled`로 묶고, 실패·0건을 경고 목록에 담기
 
 ## 3주차: 매칭과 메일
 
@@ -69,3 +69,9 @@
 | 날짜 | 항목 | 확인 방법 |
 | --- | --- | --- |
 | 2026-10-13 | 사람인 API 이용신청 | 신청 완료 (사용자) |
+| 2026-10-15 | 1주차: 프로젝트 초기화 | `npm run typecheck && npm test && npm run lint` 모두 통과 |
+| 2026-10-15 | 1주차: src/types.ts | typecheck 통과, 12개 테스트 통과 |
+| 2026-10-15 | 1주차: src/config.ts | typecheck 통과, 8개 테스트 통과 (총 20개) |
+| 2026-10-15 | 1주차: src/index.ts + out/preview.html | `npm run dry` 성공, 9개 테스트 통과 (총 29개) |
+| 2026-10-15 | 2주차: src/collectors/saramin.ts | typecheck 통과, 13개 테스트 통과 (총 42개), fixture로만 진행 |
+| 2026-10-15 | 2주차: src/store/seen.ts + index.ts allSettled 연결 | `npm run dry --save-seen` 후 `npm run dry` → 신규 0건. typecheck 통과, 53개 테스트 통과 |
