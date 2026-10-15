@@ -6,7 +6,9 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "types": ["node"]
   },
   "include": ["src", "tests", "vitest.config.ts"]
 }
